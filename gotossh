@@ -3,6 +3,7 @@
 # GOTO SSH - Auto Login SSH Server
 #
 # @author   MFrank2016
+# @link     https://github.com/MFrank2016/GotoSSH
 #
 # Usage:
 # $ chmod a+x gotossh

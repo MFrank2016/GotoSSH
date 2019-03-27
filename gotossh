@@ -23,7 +23,7 @@ echo -e  "\033[1;32m#                                                           
 
 i=0;
 if [ -z "${GOTO_SSH_CONFIG}" ]; then
-	echo -e  "\033[1;32m#                           Config(~/.gotossh_config) Not Found                      # \033[0m";
+	echo -e  "\033[1;32m#                           Config(~/.gotossh_config) Not Found                      # \033[0m"
 	echo -e  "\033[1;32m#                                                                                    # \033[0m"
 	echo -e  "\033[1;32m#                                                                                    # \033[0m"
 	echo -e  ${BORDER_LINE}
@@ -34,7 +34,7 @@ else
 		ip=`echo ${server} | awk -F\| '{ print $2 }'`
 		name=`echo ${server} | awk -F\| '{ print $3 }'`
 		line="\033[1;32m#"\ [$i]\ $remark\ -\ $ip':'$name
-		maxLineLength=`expr ${#BORDER_LINE}`
+		maxLineLength=`expr "${#BORDER_LINE}"`
 		currentLineLength=`expr "${#line}"`
 		disLineLength=`expr $maxLineLength - $currentLineLength - 9`
 		echo -e  $line"\c"
@@ -60,7 +60,7 @@ else
 	fi
 
 
-	serverInfo=`cat ~/.gotosshrc | sed -n  ${no}'P'`
+	serverInfo=`cat ~/.gotossh_config | sed -n  ${no}'P'`
 
 	insertServerInfo(){
 		ip1=`echo ${1} | awk -F\| '{ print $2 }'`

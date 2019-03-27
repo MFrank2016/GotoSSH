@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# GOTO SSH - Auto Login SSH Server
+#
+# @author   MFrank2016
+#
+# Usage:
+# $ chmod a+x gotossh
+# $ sudo cp gotossh /usr/local/bin/
+# $ 'test_server|192.168.0.1|root|password|22|0'  > ~/.gotossh_config
+# $ gotossh   // List Server
+# $ gotossh 1 // Login Num n Server
+
+TMPFILE='/tmp/.gotossh_tmpfile'
+echo -e "" > ${TMPFILE}
+GOTO_SSH_CONFIG=`cat ~/.gotossh_config`
+BORDER_LINE="\033[1;32m###################################################################################### \033[0m"
+echo -e  ${BORDER_LINE}
+echo -e  "\033[1;32m#                                  [GOTO SSH]                                        # \033[0m"
+echo -e  "\033[1;32m#                                                                                    # \033[0m"
+echo -e  "\033[1;32m#                                                                                    # \033[0m"
+
+i=0;
+if [ -z "${GOTO_SSH_CONFIG}" ]; then
+	echo -e  "\033[1;32m#                           Config(~/.gotossh_config) Not Found                      # \033[0m";
+	echo -e  "\033[1;32m#                                                                                    # \033[0m"
+	echo -e  "\033[1;32m#                                                                                    # \033[0m"
+	echo -e  ${BORDER_LINE}
+else
+	for server in ${GOTO_SSH_CONFIG}; do
+		((i++))
+		remark=`echo ${server} | awk -F\| '{ print $1 }'`
+		ip=`echo ${server} | awk -F\| '{ print $2 }'`
+		name=`echo ${server} | awk -F\| '{ print $3 }'`
+		line="\033[1;32m#"\ [$i]\ $remark\ -\ $ip':'$name
+		maxLineLength=`expr ${#BORDER_LINE}`
+		currentLineLength=`expr "${#line}"`
+		disLineLength=`expr $maxLineLength - $currentLineLength - 9`
+		echo -e  $line"\c"
+		for n in $(seq $disLineLength);
+		do
+		    echo -e  " \c"
+		done
+		echo -e  "# \033[0m"
+	done
+	echo -e  "\033[1;32m#                                                                                    # \033[0m"
+	echo -e  "\033[1;32m#                                                                                    # \033[0m"
+	echo -e  $BORDER_LINE
+
+	if [ "${1}" != "" ]; then
+	    no=${1}
+	else
+	    no=0
+	    until [ ${no} -gt 0 -a ${no} -le ${i} ] 2>/dev/null
+	    do
+	        echo -e  'Server Number:\c'
+	        read no
+	    done
+	fi
+
+
+	serverInfo=`cat ~/.gotosshrc | sed -n  ${no}'P'`
+
+	insertServerInfo(){
+		ip1=`echo ${1} | awk -F\| '{ print $2 }'`
+		name1=`echo ${1} | awk -F\| '{ print $3 }'`
+		pwd1=`echo ${1} | awk -F\| '{ print $4 }'`
+		port1=`echo ${1} | awk -F\| '{ print $5 }'`
+		rely1=`echo ${1} | awk -F\| '{ print $6 }'`
+		echo -e "spawn ssh -p${port1} -l "$name1 $ip1 >> ${TMPFILE}
+		if [ -n "${pwd1}"  ]; then
+		    echo 'expect "password:"' >> ${TMPFILE}
+		    echo 'send  "'${pwd1}'\r"' >> ${TMPFILE}
+		    echo 'expect "*:~*"' >> ${TMPFILE}
+		fi
+	}	
+
+	if [ -n "${serverInfo}" ]; then
+		ip=`echo ${serverInfo} | awk -F\| '{ print $2 }'`
+		name=`echo ${serverInfo} | awk -F\| '{ print $3 }'`
+		pwd=`echo ${serverInfo} | awk -F\| '{ print $4 }'`
+		port=`echo ${serverInfo} | awk -F\| '{ print $5 }'`
+		rely=`echo ${serverInfo} | awk -F\| '{ print $6 }'`
+
+		echo '#!/usr/bin/expect -f' > ${TMPFILE}
+		echo 'set timeout 30' >> ${TMPFILE}
+
+		if [ "${rely}" != "0" ]; then
+			relyServer=`cat ~/.gotosshrc | sed -n  ${rely}'P'`
+			insertServerInfo ${relyServer}
+			echo "send \"ssh -p${port} -l ${name} ${ip}\r\"" >> ${TMPFILE}
+		else
+			echo "spawn ssh -p${port} -l "${name} ${ip} >> ${TMPFILE}
+		fi
+
+		if [ -z "${port}"  ]; then
+			port=22
+		fi
+
+		if [ -n "${pwd}"  ]; then
+	    	echo 'expect "*password:"' >> ${TMPFILE}
+	    	echo 'send  "'${pwd}'\r"' >> ${TMPFILE}
+			if [ "${2}" == 'sudo' ]; then
+				echo 'expect "@"' >> ${TMPFILE}
+				echo 'send   "sudo su\r"' >> ${TMPFILE}
+				echo 'expect "password for"' >> ${TMPFILE}
+				echo 'send  "'${pwd}'\r"' >> ${TMPFILE}
+			fi
+		fi
+		echo 'interact' >> ${TMPFILE}
+		chmod a+x ${TMPFILE}
+		${TMPFILE}
+		echo '' > ${TMPFILE}
+	fi
+fi

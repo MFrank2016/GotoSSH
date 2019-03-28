@@ -9,8 +9,6 @@
 
 GotoSSH is committed to helping you improve work efficiency.
 
-
-
 ## Dependencies
 
 CentOS :
@@ -30,7 +28,6 @@ Mac :
 ```shell
 $ brew install expect
 ```
-
 
 
 ## Install GotoSSH

@@ -87,7 +87,7 @@ else
 		echo 'set timeout 30' >> ${TMPFILE}
 
 		if [ "${rely}" != "0" ]; then
-			relyServer=`cat ~/.gotosshrc | sed -n  ${rely}'P'`
+			relyServer=`cat ~/.gotossh_config | sed -n  ${rely}'P'`
 			insertServerInfo ${relyServer}
 			echo "send \"ssh -p${port} -l ${name} ${ip}\r\"" >> ${TMPFILE}
 		else

@@ -28,7 +28,7 @@ $ sudo apt-get install tcl tk expect
 Mac :
 
 ```shell
-$ sudo brew install expect
+$ brew install expect
 ```
 
 

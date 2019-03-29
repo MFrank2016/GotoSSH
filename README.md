@@ -75,7 +75,7 @@ $ vim ~/.gotossh_config
 server_name|ip|username|password|port|rely_server_no
 
 [Server1]
-commend=tail -f -n 10 testlog.log
+command=tail -f -n 10 testlog.log
 
 [scp]
 log1=~/testlog.log
@@ -98,35 +98,35 @@ OnlineServerB|111.231.59.85|root|testpassword2|22|1
 
 The last column of the config means this server relies another server, so this shell will login that server first.(the no starts form `1`, so `0` means this server doesn’t rely others)
 
-The second part is custom commend, you could set any commend here for each server.
+The second part is custom command, you could set any command here for each server.
 
 ```
 [Server1]
-commend=tail -f -n 10 testlog.log
+command=tail -f -n 10 testlog.log
 ```
 
 `Server1` means it's set for the first server.
 
-`commend` is the name of your commend, that could be any name you like, and the actual commend is behind the equals sign.
+`command` is the name of your command, that could be any name you like, and the actual command is behind the equals sign.
 
 So you could use it by this way:
 
 ```
-gotossh 1 commend
+gotossh 1 command
 ```
 
-And it will login the first server and excute your commend.
+And it will login the first server and excute your command.
 
-Notice that, if your commend needs a password, like 'scp root@xxxx:xxx xxx', you should add the pwd after the commend.
+Notice that, if your command needs a password, like 'scp root@xxxx:xxx xxx', you should add the pwd after the command.
 
 For example:
 
 ```
 [Server1]
-commend=scp root@111.231.59.85:/var/log/test-service/test-service.log ./test-server.log|testpassword2
+command=scp root@111.231.59.85:/var/log/test-service/test-service.log ./test-server.log|testpassword2
 ```
 
-The last part is the support of `scp` commend:
+The last part is the support of `scp` command:
 
 ```
 [scp]
@@ -287,7 +287,7 @@ $ vim ~/.gotossh_config
 server_name|ip|username|password|port|rely_server_no
 
 [Server1]
-commend=tail -f -n 10 testlog.log
+command=tail -f -n 10 testlog.log
 
 [scp]
 log1=~/testlog.log
@@ -314,17 +314,17 @@ OnlineServerB|111.231.59.85|root|testpassword2|22|1
 
 ```
 [Server1]
-commend=tail -f -n 10 testlog.log
+command=tail -f -n 10 testlog.log
 ```
 
 `Server1` 表示以下是为第一台服务器设置的命令，同理`Server2`则表示为第二台设置的命令。对于顺序没有要求，只要为需要设置自定义命令的服务器添加该选项即可。
 
-`commend` 是命令的名字，可以随意取名，最好简单一点，方便输入，等号后面是实际执行的命令。
+`command` 是命令的名字，可以随意取名，最好简单一点，方便输入，等号后面是实际执行的命令。
 
 举个栗子：
 
 ```
-gotossh 1 commend
+gotossh 1 command
 ```
 
 只要你小手一点回车，脚本便会自动帮你登录到第一台服务器，然后执行上面的命令`tail -f -n 10 testlog.log`。
@@ -335,7 +335,7 @@ gotossh 1 commend
 
 ```
 [Server1]
-commend=scp root@111.231.59.85:/var/log/test-service/test-service.log ./test-server.log|testpassword2
+command=scp root@111.231.59.85:/var/log/test-service/test-service.log ./test-server.log|testpassword2
 ```
 
 配置文件的最后一部分是对于`scp`命令的支持。

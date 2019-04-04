@@ -37,7 +37,6 @@ Copy file from the online server：
 
 ![](https://i.loli.net/2019/03/29/5c9cf7b506db0.gif)
 
-
 ## Dependencies
 
 CentOS :
@@ -57,7 +56,6 @@ Mac :
 ```shell
 $ brew install expect
 ```
-
 
 ## Install GotoSSH
 
@@ -185,11 +183,9 @@ $ gotossh
 Server Number:(Input Server Number Here)
 ```
 
-
 ```shell
 gotossh 1
 ```
-
 
 ```shell
 gotossh 2
@@ -219,7 +215,7 @@ gotossh 2 scp log4
 
 ## 说明
 
-GotoSSH是一个一键登录SSH的脚本，可直接从跳板机登录到线上服务器，致力于帮助你提高工作效率。
+GotoSSH 是一个一键登录 SSH 的脚本，可直接从跳板机登录到线上服务器，致力于帮助你提高工作效率。
 
 这里有一些动态图，可以帮助你快速了解这个脚本能够做什么。
 
@@ -308,7 +304,7 @@ JumpServer1|118.24.163.31|root|testpassword|22|0
 OnlineServerB|111.231.59.85|root|testpassword2|22|1
 ```
 
-最后一列是代表该服务器依赖于哪个服务器，如果该列的值设置为0，代表不依赖于其他服务器，否则代表需要先登录其他服务器后才能登录该服务器，目前暂时只支持二连跳，不支持多跳转。
+最后一列是代表该服务器依赖于哪个服务器，如果该列的值设置为 0，代表不依赖于其他服务器，否则代表需要先登录其他服务器后才能登录该服务器，目前暂时只支持二连跳，不支持多跳转。
 
 第二部分是自定义命令，你可以在这里为每台服务器单独设置一些自定义命令。
 
@@ -395,11 +391,9 @@ $ gotossh
 Server Number:(Input Server Number Here)
 ```
 
-
 ```shell
 gotossh 1
 ```
-
 
 ```shell
 gotossh 2
@@ -424,5 +418,3 @@ gotossh 1 scp log3
 ```
 gotossh 2 scp log4
 ```
-
-

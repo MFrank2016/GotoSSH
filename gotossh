@@ -13,181 +13,175 @@
 # $ gotossh 1 // Login Num n Server
 
 TMPFILE='/tmp/.gotossh_tmpfile'
-echo -e "" > ${TMPFILE}
+echo -e "" >${TMPFILE
 CONFIG_FILE="$HOME/.gotossh_config"
-GOTO_SSH_CONFIG=`cat ~/.gotossh_config`
+GOTO_SSH_CONFIG=$(cat ~/.gotossh_config)
 BORDER_LINE="\033[1;32m###################################################################################### \033[0m"
-echo -e  ${BORDER_LINE}
-echo -e  "\033[1;32m#                                  [GOTO SSH]                                        # \033[0m"
-echo -e  "\033[1;32m#                                                                                    # \033[0m"
-echo -e  "\033[1;32m#                                                                                    # \033[0m"
+echo -e ${BORDER_LINE}
+echo -e "\033[1;32m#                                  [GOTO SSH]                                        # \033[0m"
+echo -e "\033[1;32m#                                                                                    # \033[0m"
+echo -e "\033[1;32m#                                                                                    # \033[0m"
 
-i=0;
+i=0
 if [ -z "${GOTO_SSH_CONFIG}" ]; then
-	echo -e  "\033[1;32m#                           Config(~/.gotossh_config) Not Found                      # \033[0m"
-	echo -e  "\033[1;32m#                                                                                    # \033[0m"
-	echo -e  "\033[1;32m#                                                                                    # \033[0m"
-	echo -e  ${BORDER_LINE}
+	echo -e "\033[1;32m#                           Config(~/.gotossh_config) Not Found                      # \033[0m"
+	echo -e "\033[1;32m#                                                                                    # \033[0m"
+	echo -e "\033[1;32m#                                                                                    # \033[0m"
+	echo -e ${BORDER_LINE}
 else
 	for server in ${GOTO_SSH_CONFIG}; do
 		((i++))
 		if [[ "${server}" == *\[Server* ]]; then
-			break;
+			break
 		fi
-		remark=`echo ${server} | awk -F\| '{ print $1 }'`
-		ip=`echo ${server} | awk -F\| '{ print $2 }'`
-		name=`echo ${server} | awk -F\| '{ print $3 }'`
+		remark=$(echo ${server} | awk -F\| '{ print $1 }')
+		ip=$(echo ${server} | awk -F\| '{ print $2 }')
+		name=$(echo ${server} | awk -F\| '{ print $3 }')
 		#line="\033[1;32m#"\ [$i]\ $remark\ -\ $ip':'$name
 		line="\033[1;32m#"\ [$i]\ $remark
-		maxLineLength=`expr "${#BORDER_LINE}"`
-		currentLineLength=`expr "${#line}"`
-		disLineLength=`expr $maxLineLength - $currentLineLength - 9`
-		echo -e  $line"\c"
-		for n in $(seq $disLineLength);
-		do
-		    echo -e  " \c"
+		maxLineLength=$(expr "${#BORDER_LINE}")
+		currentLineLength=$(expr "${#line}")
+		disLineLength=$(expr $maxLineLength - $currentLineLength - 9)
+		echo -e $line"\c"
+		for n in $(seq $disLineLength); do
+			echo -e " \c"
 		done
-		echo -e  "# \033[0m"
+		echo -e "# \033[0m"
 	done
-	echo -e  "\033[1;32m#                                                                                    # \033[0m"
-	echo -e  "\033[1;32m#                                                                                    # \033[0m"
-	echo -e  $BORDER_LINE
+	echo -e "\033[1;32m#                                                                                    # \033[0m"
+	echo -e "\033[1;32m#                                                                                    # \033[0m"
+	echo -e $BORDER_LINE
 
 	if [ "${1}" != "" ]; then
-	    no=${1}
+		no=${1}
 	else
-	    no=0
-	    until [ ${no} -gt 0 -a ${no} -le ${i} ] 2>/dev/null
-	    do
-	        echo -e  'Server Number:\c'
-	        read no
-	    done
+		no=0
+		until [ ${no} -gt 0 -a ${no} -le ${i} ] 2>/dev/null; do
+			echo -e 'Server Number:\c'
+			read no
+		done
 	fi
 
+	serverInfo=$(cat ~/.gotossh_config | sed -n ${no}'P')
 
-	serverInfo=`cat ~/.gotossh_config | sed -n  ${no}'P'`
-
-	insertServerInfo(){
-		local tmpIp=`echo ${1} | awk -F\| '{ print $2 }'`
-		local tmpName=`echo ${1} | awk -F\| '{ print $3 }'`
-		local tmpPwd=`echo ${1} | awk -F\| '{ print $4 }'`
-		local tmpPort=`echo ${1} | awk -F\| '{ print $5 }'`
-		local tmpRely=`echo ${1} | awk -F\| '{ print $6 }'`
-		echo "spawn ssh -p${tmpPort} -l "$tmpName $tmpIp >> ${TMPFILE}
-		if [ -n "${tmpPwd}"  ]; then
-		    echo 'expect "*password:"' >> ${TMPFILE}
-		    echo 'send  "'${tmpPwd}'\r"' >> ${TMPFILE}
-		    echo 'expect "*:~*"' >> ${TMPFILE}
+	insertServerInfo() {
+		local tmpIp=$(echo ${1} | awk -F\| '{ print $2 }')
+		local tmpName=$(echo ${1} | awk -F\| '{ print $3 }')
+		local tmpPwd=$(echo ${1} | awk -F\| '{ print $4 }')
+		local tmpPort=$(echo ${1} | awk -F\| '{ print $5 }')
+		local tmpRely=$(echo ${1} | awk -F\| '{ print $6 }')
+		echo "spawn ssh -p${tmpPort} -l "$tmpName $tmpIp >>${TMPFILE}
+		if [ -n "${tmpPwd}" ]; then
+			echo 'expect "*password:"' >>${TMPFILE}
+			echo 'send  "'${tmpPwd}'\r"' >>${TMPFILE}
+			echo 'expect "*:~*"' >>${TMPFILE}
 		fi
-	}	
+	}
 
 	if [ -n "${serverInfo}" ]; then
-		ip=`echo ${serverInfo} | awk -F\| '{ print $2 }'`
-		name=`echo ${serverInfo} | awk -F\| '{ print $3 }'`
-		pwd=`echo ${serverInfo} | awk -F\| '{ print $4 }'`
-		port=`echo ${serverInfo} | awk -F\| '{ print $5 }'`
-		rely=`echo ${serverInfo} | awk -F\| '{ print $6 }'`
+		ip=$(echo ${serverInfo} | awk -F\| '{ print $2 }')
+		name=$(echo ${serverInfo} | awk -F\| '{ print $3 }')
+		pwd=$(echo ${serverInfo} | awk -F\| '{ print $4 }')
+		port=$(echo ${serverInfo} | awk -F\| '{ print $5 }')
+		rely=$(echo ${serverInfo} | awk -F\| '{ print $6 }')
 
-		echo '#!/usr/bin/expect -f' > ${TMPFILE}
-		echo 'set timeout 30' >> ${TMPFILE}
+		echo '#!/usr/bin/expect -f' >${TMPFILE}
+		echo 'set timeout 30' >>${TMPFILE}
 
-		readINIInfo(){     
-		    local section=$1  
-		    local key=$2  
-		    local iniInfo=`awk -F '=' '/\['${section}'\]/{a=1}a==1&&$1~/'${key}'/{print $2;exit}' ${CONFIG_FILE}`    
-		    echo "$iniInfo"    
-		} 
+		readINIInfo() {
+			local section=$1
+			local key=$2
+			local iniInfo=$(awk -F '=' '/\['${section}'\]/{a=1}a==1&&$1~/'${key}'/{print $2;exit}' ${CONFIG_FILE})
+			echo "$iniInfo"
+		}
 		if [ "${2}" == "scp" -a "${3}" != "" ]; then
-			insertSCPInfo(){
-				local tmpIp=`echo ${1} | awk -F\| '{ print $2 }'`
-				local tmpName=`echo ${1} | awk -F\| '{ print $3 }'`
-				local tmpPwd=`echo ${1} | awk -F\| '{ print $4 }'`
-				local tmpPort=`echo ${1} | awk -F\| '{ print $5 }'`
-				local tmpRely=`echo ${1} | awk -F\| '{ print $6 }'`
+			insertSCPInfo() {
+				local tmpIp=$(echo ${1} | awk -F\| '{ print $2 }')
+				local tmpName=$(echo ${1} | awk -F\| '{ print $3 }')
+				local tmpPwd=$(echo ${1} | awk -F\| '{ print $4 }')
+				local tmpPort=$(echo ${1} | awk -F\| '{ print $5 }')
+				local tmpRely=$(echo ${1} | awk -F\| '{ print $6 }')
 				if [ "${4}" != "" ]; then
-					echo "spawn scp ${tmpName}@${tmpIp}:${2} ${3}" >> ${TMPFILE}
+					echo "spawn scp ${tmpName}@${tmpIp}:${2} ${3}" >>${TMPFILE}
 				else
-					echo "send \"scp ${tmpName}@${tmpIp}:${2} ${3}\r\"" >> ${TMPFILE}
+					echo "send \"scp ${tmpName}@${tmpIp}:${2} ${3}\r\"" >>${TMPFILE}
 				fi
-				echo 'expect "*password:"' >> ${TMPFILE}
-		    	echo 'send  "'${tmpPwd}'\r"' >> ${TMPFILE}
-		   		echo 'expect "*:~*"' >> ${TMPFILE}
+				echo 'expect "*password:"' >>${TMPFILE}
+				echo 'send  "'${tmpPwd}'\r"' >>${TMPFILE}
+				echo 'expect "*:~*"' >>${TMPFILE}
 			}
 
-			logPath=`readINIInfo "scp" ${3}`
+			logPath=$(readINIInfo "scp" ${3})
 			echo $logPath
 			if [ -n "${logPath}" ]; then
 				if [ "${rely}" == "0" ]; then
 					insertSCPInfo ${serverInfo} ${logPath} "./${logPath##*/}" "0"
 				else
-					relyServer=`cat ~/.gotossh_config | sed -n  ${rely}'P'`
+					relyServer=$(cat ~/.gotossh_config | sed -n ${rely}'P')
 					insertServerInfo ${relyServer}
-					time=`date '+%Y%m%d_%H%M%S'`
+					time=$(date '+%Y%m%d_%H%M%S')
 					oldPath=${logPath}
 					fileName=${logPath##*/}"-"${time}
 					insertSCPInfo ${serverInfo} ${oldPath} "~/${fileName}"
-		    		echo "send \"exit\r\"" >> ${TMPFILE}
-		    		echo 'expect "*:~*"' >> ${TMPFILE}
+					echo "send \"exit\r\"" >>${TMPFILE}
+					echo 'expect "*:~*"' >>${TMPFILE}
 					insertSCPInfo ${relyServer} "~/"${fileName} "./"${fileName%-*} "0"
 				fi
 				chmod a+x ${TMPFILE}
 				${TMPFILE}
-				echo '' > ${TMPFILE}
+				echo '' >${TMPFILE}
 				exit
 			else
 				echo "log path not found!"
-				echo '' > ${TMPFILE}
+				echo '' >${TMPFILE}
 				exit
 			fi
 		fi
 
 		if [ "${rely}" != "0" ]; then
-			relyServer=`cat ~/.gotossh_config | sed -n  ${rely}'P'`
+			relyServer=$(cat ~/.gotossh_config | sed -n ${rely}'P')
 			insertServerInfo ${relyServer}
-			echo "send \"ssh -p${port} -l ${name} ${ip}\r\"" >> ${TMPFILE}
+			echo "send \"ssh -p${port} -l ${name} ${ip}\r\"" >>${TMPFILE}
 		else
-			echo "spawn ssh -p${port} -l "${name} ${ip} >> ${TMPFILE}
+			echo "spawn ssh -p${port} -l "${name} ${ip} >>${TMPFILE}
 		fi
 
-		if [ -z "${port}"  ]; then
+		if [ -z "${port}" ]; then
 			port=22
 		fi
 
-		
-
 		if [ -n "${2}" ]; then
 			svName="Server${no}"
-			commend=`readINIInfo ${svName} ${2}`
+			commend=$(readINIInfo ${svName} ${2})
 			if [[ $commend == *\|* ]]; then
-				commendPwd=`echo ${commend} | awk -F\| '{ print $2 }'`
+				commendPwd=$(echo ${commend} | awk -F\| '{ print $2 }')
 				commend="${commend%%|*}"
 			fi
 		fi
 
-
-		if [ -n "${pwd}"  ]; then
-	    	echo 'expect "*password:"' >> ${TMPFILE}
-	    	echo 'send  "'${pwd}'\r"' >> ${TMPFILE}
-	    	echo 'expect "*:~*"' >> ${TMPFILE}
+		if [ -n "${pwd}" ]; then
+			echo 'expect "*password:"' >>${TMPFILE}
+			echo 'send  "'${pwd}'\r"' >>${TMPFILE}
+			echo 'expect "*:~*"' >>${TMPFILE}
 			if [ "${2}" == 'sudo' ]; then
-				echo 'expect "@"' >> ${TMPFILE}
-				echo 'send   "sudo su\r"' >> ${TMPFILE}
-				echo 'expect "password for"' >> ${TMPFILE}
-				echo 'send  "'${pwd}'\r"' >> ${TMPFILE}
-				echo 'expect "*:~*"' >> ${TMPFILE}
+				echo 'expect "@"' >>${TMPFILE}
+				echo 'send   "sudo su\r"' >>${TMPFILE}
+				echo 'expect "password for"' >>${TMPFILE}
+				echo 'send  "'${pwd}'\r"' >>${TMPFILE}
+				echo 'expect "*:~*"' >>${TMPFILE}
 			fi
 			if [ -n "${commend}" ]; then
-				echo 'send  "'${commend}'\r"' >> ${TMPFILE}
+				echo 'send  "'${commend}'\r"' >>${TMPFILE}
 			fi
 			if [ -n "${commendPwd}" ]; then
-				echo 'expect "*password:"' >> ${TMPFILE}
-				echo 'send  "'${commendPwd}'\r"' >> ${TMPFILE}
+				echo 'expect "*password:"' >>${TMPFILE}
+				echo 'send  "'${commendPwd}'\r"' >>${TMPFILE}
 			fi
 		fi
 
-		echo 'interact' >> ${TMPFILE}
+		echo 'interact' >>${TMPFILE}
 		chmod a+x ${TMPFILE}
 		${TMPFILE}
-		echo '' > ${TMPFILE}
+		echo '' >${TMPFILE}
 	fi
 fi

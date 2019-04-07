@@ -8,59 +8,141 @@
 # Usage:
 # $ chmod a+x gotossh
 # $ sudo cp gotossh /usr/local/bin/
-# $ 'test_server|192.168.0.1|root|password|22|0'  > ~/.gotossh_config
+# $ 'test_server||192.168.0.1||root||password||22||0'  > ~/.gotossh_config
 # $ gotossh   // List Server
 # $ gotossh 1 // Login Num n Server
-VERSION=2.0
-TMP_FILE='$HOME/.gotossh_TMP_FILE'
-echo -e "" > ${TMP_FILE}
-CONFIG_FILE="$HOME/.gotossh_config"
-SETTINGFILE='$HOME/.gotossh_settings'
-GOTO_SSH_CONFIG=`cat ~/.gotossh_config`
 
+
+
+VERSION=3.0
+TMP_FILE="$HOME/.gotossh_tmpfile"
+# 若临时脚本文件不存在则创建
+if [ ! -f ${TMP_FILE} ]; then
+	touch ${TMP_FILE}
+fi
+echo "" > ${TMP_FILE}
+CONFIG_FILE="$HOME/.gotossh_config"
+GOTO_SSH_CONFIG=$(cat ~/.gotossh_config)
 LINE_BEGIN="\033[1;32m"
-LINE_END="${LINE_END}"
-BORDER_LINE="${LINE_BEGIN}###################################################################################### ${LINE_END}"
-MAXLINELENGTH=`expr "${#BORDER_LINE}"`
+LINE_END="\033[0m"
+BORDER_LINE="${LINE_BEGIN}####################################################################################### ${LINE_END}"
+MAX_LINE_LENGTH=$(expr "${#BORDER_LINE}")
 I=0;
+COMMAND_LIST=""
+COMMAND_NUM=0
+
+
+
+
 
 # ==============定义输出函数============
-# 输出首/尾行
+# 输出-【首/尾行】
 echoFullLine(){
     echo -e  ${BORDER_LINE}
 }
-# 输出间隔行
+
+# 输出-【间隔行】
 echoSkipLine(){
-    echo -e  "${LINE_BEGIN}#                                  [GOTO SSH]                                        # ${LINE_END}"
+    echo -e  "${LINE_BEGIN}#                                                                                     # ${LINE_END}"
 }
-# 输出服务器信息行
-echoServerLine(){
-    local linkName=`echo ${1} | awk -F\| '{ print $1 }'`
-    local line="${LINE_BEGIN}#"\ [$i]\ ${linkName}
-    local currentLineLength=`expr "${#line}"`
-    local disLineLength=`expr $MAXLINELENGTH - $currentLineLength - 9`
-    echo -e  $line"\c"
-    for n in $(seq $disLineLength);
+
+# 输出-【正中提示信息】
+echoMiddleLine(){
+	local lineBegin="${LINE_BEGIN}#"
+	local lineEnd="# ${LINE_END}"
+	local info=${1}
+	local length=$(expr "${#info}")
+	local num=$(expr ${MAX_LINE_LENGTH} - ${#info} - 20)
+	num=$((num/2))
+	echo -e  $lineBegin"\c"
+    for n in $(seq ${num});
+    do
+        echo -e  " \c"
+    done
+    echo -e ${info}" \c"
+    for n in $(seq ${num});
     do
         echo -e  " \c"
     done
     echo -e  "# ${LINE_END}"
 }
-# 输出选择列表
-echoServerList(){
-	echoFirstLine
-	echo -e  "${LINE_BEGIN}#                                  [GOTO SSH]                                        # ${LINE_END}"
-	echoSkipLine
-	echoSkipLine
 
-	# 配置文件不存在
-	if [ -z "${GOTO_SSH_CONFIG}" ]; then
-		echo -e  "${LINE_BEGIN}#                           Config(~/.gotossh_config) Not Found                      # ${LINE_END}"
-		echoSkipLine
-		echoSkipLine
-		echoFullLine
-		exit
-	fi
+# 输出-【靠左输出一行】
+echoLeftLine(){
+    local tmpLine="${LINE_BEGIN}#"\ [${1}]\ ${2}
+    local currentLineLength=$(expr "${#tmpLine}")
+    local disLineLength=$(expr ${MAX_LINE_LENGTH} - ${currentLineLength} - 9)
+    echo -e  $tmpLine"\c"
+    for n in $(seq ${disLineLength});
+    do
+        echo -e  " \c"
+    done
+    echo -e  "# ${LINE_END}"
+}
+
+# 输出-【服务器信息行】
+echoServerLine(){
+    local linkName=$(echo ${2} | sed 's/||/ /g' | awk '{ print $1 }')
+    echoLeftLine ${1} ${linkName} 
+    # local line="${LINE_BEGIN}#"\ [$I]\ ${linkName}
+    # local currentLineLength=$(expr "${#line}")
+    # local disLineLength=$(expr ${MAX_LINE_LENGTH} - ${currentLineLength} - 9)
+    # echo -e  $line"\c"
+    # for n in $(seq ${disLineLength});
+    # do
+    #     echo -e  " \c"
+    # done
+    # echo -e  "# ${LINE_END}"
+}
+
+# 输出-【提示信息】
+echoTipsInfo(){
+	echoFullLine
+	echoMiddleLine "[GOTO SSH]"
+	echoSkipLine
+	echoMiddleLine "${1}"
+	echoSkipLine
+	echoSkipLine
+	echoFullLine
+}
+
+# 函数-【输出命令列表】
+echoCommandList(){
+	echoFullLine
+	echoMiddleLine "[COMMAND LIST]"
+	echoSkipLine
+	local echoCommandList=$(sed -n '/\['${1}'\]/,/^\[/p'  ${CONFIG_FILE} | sed '/^\[.*\]/d' | awk -F '=' '{print $1}' | sed '/^$/d')
+    echoCommandList=$(echo -e "${echoCommandList}\n$(sed -n '/\[common-command\]/,/^\[/p'  ${CONFIG_FILE} | sed '/^\[.*\]/d' | awk -F '=' '{print $1}' | sed '/^$/d')")
+    COMMAND_LIST=${echoCommandList}
+    COMMAND_NUM=0
+	local tmpNum=1
+	for tmp in ${echoCommandList}; do
+		echoLeftLine ${tmpNum} ${tmp}
+		((tmpNum++))
+	done
+    COMMAND_NUM=${tmpNum}
+	echoSkipLine
+	echoSkipLine
+	echoFullLine
+}
+
+# 输出-【配置文件不存在】
+echoConfigFileNotExist(){
+	echoFullLine
+	echoMiddleLine "[GOTO SSH]"
+	echoSkipLine
+	echoMiddleLine "Config(~/.gotossh_config) Not Found"
+	echoSkipLine
+	echoSkipLine
+	echoFullLine
+}
+
+# 输出-【选择列表】
+echoServerList(){
+	echoFullLine
+	echoMiddleLine "[GOTO SSH]"
+	echoSkipLine
+	echoSkipLine
 
 	# 循环读取服务器名称
 	for serverLine in ${GOTO_SSH_CONFIG}; do
@@ -68,27 +150,196 @@ echoServerList(){
 		if [[ "${serverLine}" == *\[Server* ]]; then
 			break;
 		fi
-		echoServerLine ${serverLine}
+		echoServerLine ${I} ${serverLine}
 	done
 
-	echoSkipLine
 	echoSkipLine
 	echoFullLine
 }
 # ===========输出函数定义结束===========
 
-# ===========开始处理       ===========
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============配置文件升级函数===========
+
+# 函数-【将配置文件从v1、v2 升级到v3】
+updateConfigV1V2toV3(){
+	# 确认是否存在类似xxx||xxx||xxx||xxx||xxx||xxx配置
+	local tmpS = $(grep ".*||.*||.*||.*||.*||.*" ${CONFIG_FILE})
+	if [ -n "${tmpS}" ]; then
+		return -1
+	fi
+	# 将服务器信息的分隔符从|变为||
+	sed -i '/|/,/\[/s/|/||/g' ${CONFIG_FILE}
+	# 将[ServerN]替换为[Server-LinkName]
+	local tmpCommand=$(grep -Eo '\[Server[0-9]+\]' ${CONFIG_FILE} | head -1)
+	until [ -z "${tmpCommand}" ]
+    do
+    	local tmpNum=$(echo ${tmpCommand} | sed -r 's/\[Server([0-9]+)\]/\1/g')
+        local tmpLinkName=$(sed -n "${tmpNum}p" ${CONFIG_FILE} | sed "s/||/ /g" | awk '{ print $1 }')
+        if [ -z "${tmpLinkName}" ]; then
+        	echo "The config of Server${tmpNum} doesn't exist!"
+        	exit
+        fi
+        sed -i "s/Server${tmpNum}/Server-${tmpLinkName}/g" ${CONFIG_FILE}
+        tmpCommand=$(grep -Eo '\[Server[0-9]+\]' ${CONFIG_FILE} | head -1)
+    done
+    sed -i '$a\\n[settings]\nversion='${VERSION} ${CONFIG_FILE}
+}
+
+# ==============配置文件升级结束===========
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============判断当前配置文件版本=====
+if [ ! -f ${CONFIG_FILE} ]; then
+	echoConfigFileNotExist
+	exit
+fi
+
+SETTINGS=$(cat ${CONFIG_FILE} | sed -n '/\[settings\]/,/^$/p')
+
+if [ -z "${SETTINGS}" ]; then
+	# v3之前的版本没有改选项，需将配置文件更新至当前版本
+	updateConfigV1V2toV3
+fi
+
+# ==============配置文件处理结束========
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============辅助函数==============
+# 函数-【读取命令信息】
+readCommand(){
+    local tmp_section="Server-"$1
+    local tmp_command=$2
+    local tmp_commandInfo=$(readINIInfo ${tmp_section} ${tmp_command})
+    if [ -z "${tmp_commandInfo}" ]; then
+        # 如果自定义命令中未读取到该命令，则前往模板命令中读取
+        tmp_commandInfo=$(readINIInfo "common-command" ${tmp_command})
+    fi
+    echo "${tmp_commandInfo}"
+}
+
+# 函数-【读取配置项信息】
+readINIInfo(){
+    local tmp_section=$1
+    local tmp_key=$2
+    local tmp_iniInfo=$(sed -n "/\[${tmp_section}\]/,/^\[/p" ${CONFIG_FILE} | grep "^${tmp_key}=" | sed "s#${tmp_key}=##")
+    echo "$tmp_iniInfo"
+}
+
+# 函数-【替换命令中的参数】
+replaceCommandAttribute(){
+    local tmp_section="Server-Attribute-${1}"
+    local tmp_command=${2}
+    # 先替换[P1][P2]
+    tmp_command=$(echo "${tmp_command}" | sed -e "s|\[P1\]|${3}|;s|\[P2\]|${4}|")
+    # 替换自定义属性
+    while [[ "${tmp_command}" == *\[*\]* ]]
+    do
+        local tmp_key=$(echo ${tmp_command} | sed -r 's/.*\[(.*)\].*/\1/')
+        local tmp_attribute=$(readINIInfo ${tmp_section} ${tmp_key})
+        if [ -z "${tmp_attribute}" ]; then
+            echo "Attribute Not Found:${tmp_key}!"
+            exit
+        fi
+        tmp_command=$(echo ${tmp_command} | sed "s/\[${tmp_key}\]/${tmp_attribute}/")
+    done  
+    echo ${tmp_command}
+}
+
+# 函数-【向临时脚本中插入服务器登录信息】
+insertServerInfo(){
+    local tmpIp=$(echo ${1} | sed 's/||/ /g' | awk '{ print $2 }')
+    local tmpName=$(echo ${1} | sed 's/||/ /g' | awk '{ print $3 }')
+    local tmpPwd=$(echo ${1} | sed 's/||/ /g' |  awk '{ print $4 }')
+    local tmpPort=$(echo ${1} | sed 's/||/ /g' |  awk '{ print $5 }')
+    local tmpRely=$(echo ${1} | sed 's/||/ /g' |  awk '{ print $6 }')
+    echo "spawn ssh -p${tmpPort} -l "$tmpName $tmpIp >> ${TMP_FILE}
+    if [ -n "${tmpPwd}"  ]; then
+		echo 'expect {
+		"*yes/no" { send "yes\r"; exp_continue }
+		"*password*" { send "'${tmpPwd}'\r" }
+		}' >> ${TMP_FILE}
+        echo 'expect "*:~*"' >> ${TMP_FILE}
+    fi
+}
+
+# 函数-【向临时脚本中插入scp命令信息】
+insertSCPInfo(){
+    local tmpIp=$(echo ${1} | sed 's/||/ /g' | awk  '{ print $2 }')
+    local tmpName=$(echo ${1} | sed 's/||/ /g' | awk  '{ print $3 }')
+    local tmpPwd=$(echo ${1} | sed 's/||/ /g' | awk  '{ print $4 }')
+    local tmpPort=$(echo ${1} | sed 's/||/ /g' | awk  '{ print $5 }')
+    local tmpRely=$(echo ${1} | sed 's/||/ /g' | awk  '{ print $6 }')
+    if [ "${4}" != "" ]; then
+        echo "spawn scp ${tmpName}@${tmpIp}:${2} ${3}" >> ${TMP_FILE}
+    else
+        echo "send \"scp ${tmpName}@${tmpIp}:${2} ${3}\r\"" >> ${TMP_FILE}
+    fi
+    echo 'expect "*password:"' >> ${TMP_FILE}
+    echo 'send  "'${tmpPwd}'\r"' >> ${TMP_FILE}
+    echo 'expect "*:~*"' >> ${TMP_FILE}
+}
+
+# ===================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==============开始处理命令参数===========
 # -l 命令
-if [ ${1} = "-l" ]; then
+if [ "${1}" == "-l" ]; then
 	echoServerList
 	exit
 fi
 
-# 判断是否直接跳转
-if [ ${1} ]; then
+# 读取选择的服务器
+if [ -n "${1}" ]; then
     NO=${1}
 else
     NO=0
+    echoServerList
     until [ ${NO} -gt 0 -a ${NO} -le ${I} ] 2>/dev/null
     do
         echo -e  'Server Number:\c'
@@ -96,134 +347,119 @@ else
     done
 fi
 
+
 # 读取该服务器配置
-SERVER_INFO=`cat ~/.gotossh_config | sed -n "${NO}p"`
+SERVER_INFO=$(sed -n "${NO}p" ${CONFIG_FILE})
+if [ -z "${SERVER_INFO}" ]; then
+	echoTipsInfo "Server Info Not Found!"
+	exit
+fi
 
-# 【插入服务器信息】
-# 描述：将服务器登录信息写入临时脚本中
-# 参数1：服务器信息
-insertSERVER_INFO(){
-    local tmpIp=`echo ${1} | awk -F\| '{ print $2 }'`
-    local tmpName=`echo ${1} | awk -F\| '{ print $3 }'`
-    local tmpPwd=`echo ${1} | awk -F\| '{ print $4 }'`
-    local tmpPort=`echo ${1} | awk -F\| '{ print $5 }'`
-    local tmpRely=`echo ${1} | awk -F\| '{ print $6 }'`
-    echo "spawn ssh -p${tmpPort} -l "$tmpName $tmpIp >> ${TMP_FILE}
-    if [ -n "${tmpPwd}"  ]; then
-		echo 'expect {
-		"	*yes/no" { send "yes\r"; exp_continue }
-		"	*password:" { send "${tmpPwd}\r" }
-		}' >> ${TMP_FILE}
-        echo 'expect "*:~*"' >> ${TMP_FILE}
-    fi
-}
+LINK_NAME=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $1 }')
+IP=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $2 }')
+NAME=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $3 }')
+PWD=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $4 }')
+PORT=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $5 }')
+RELY=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $6 }')
+SERVICE_NAME=$(echo ${SERVER_INFO} | sed 's/||/ /g' | awk  '{ print $7 }')
+SERVER_CONFIG_NAME="Server-"${LINK_NAME}
 
-if [ -n "${SERVER_INFO}" ]; then
-    IP=`echo ${SERVER_INFO} | awk -F\| '{ print $2 }'`
-    NAME=`echo ${SERVER_INFO} | awk -F\| '{ print $3 }'`
-    PWD=`echo ${SERVER_INFO} | awk -F\| '{ print $4 }'`
-    port=`echo ${SERVER_INFO} | awk -F\| '{ print $5 }'`
-    rely=`echo ${SERVER_INFO} | awk -F\| '{ print $6 }'`
-    
-    echo '#!/usr/bin/expect -f' > ${TMP_FILE}
-    echo 'set timeout 30' >> ${TMP_FILE}
-    
-    readINIInfo(){
-        local section=$1
-        local key=$2
-        local iniInfo=`awk -F '=' '/\['${section}'\]/{a=1}a==1&&$1~/'${key}'/{print $2;exit}' ${CONFIG_FILE}`
-        echo "$iniInfo"
-    }
-    if [ "${2}" == "scp" -a "${3}" != "" ]; then
-        insertSCPInfo(){
-            local tmpIp=`echo ${1} | awk -F\| '{ print $2 }'`
-            local tmpName=`echo ${1} | awk -F\| '{ print $3 }'`
-            local tmpPwd=`echo ${1} | awk -F\| '{ print $4 }'`
-            local tmpPort=`echo ${1} | awk -F\| '{ print $5 }'`
-            local tmpRely=`echo ${1} | awk -F\| '{ print $6 }'`
-            if [ "${4}" != "" ]; then
-                echo "spawn scp ${tmpName}@${tmpIp}:${2} ${3}" >> ${TMP_FILE}
-            else
-                echo "send \"scp ${tmpName}@${tmpIp}:${2} ${3}\r\"" >> ${TMP_FILE}
-            fi
-            echo 'expect "*password:"' >> ${TMP_FILE}
-            echo 'send  "'${tmpPwd}'\r"' >> ${TMP_FILE}
-            echo 'expect "*:~*"' >> ${TMP_FILE}
-        }
-        
-        logPath=`readINIInfo "scp" ${3}`
-        echo $logPath
-        if [ -n "${logPath}" ]; then
-            if [ "${rely}" == "0" ]; then
-                insertSCPInfo ${SERVER_INFO} ${logPath} "./${logPath##*/}" "0"
-            else
-                relyServer=`cat ~/.gotossh_config | sed -n  ${rely}'P'`
-                insertSERVER_INFO ${relyServer}
-                time=`date '+%Y%m%d_%H%M%S'`
-                oldPath=${logPath}
-                fileName=${logPath##*/}"-"${time}
-                insertSCPInfo ${SERVER_INFO} ${oldPath} "~/${fileName}"
-                echo "send \"exit\r\"" >> ${TMP_FILE}
-                echo 'expect "*:~*"' >> ${TMP_FILE}
-                insertSCPInfo ${relyServer} "~/"${fileName} "./"${fileName%-*} "0"
-            fi
-            chmod a+x ${TMP_FILE}
-            ${TMP_FILE}
-            echo '' > ${TMP_FILE}
-            exit
-        else
-            echo "log path not found!"
-            echo '' > ${TMP_FILE}
-            exit
-        fi
+# -cl 命令-输出该服务器的自定义命令列表
+if [ "${2}" == "-cl" ]; then
+	echoCommandList ${SERVER_CONFIG_NAME}
+	exit
+fi
+
+echo '#!/usr/bin/expect -f' > ${TMP_FILE}
+echo 'set timeout 30' >> ${TMP_FILE}
+
+# scp命令
+if [ "${2}" == "scp" -a "${3}" != "" ]; then
+    logPath=$(readINIInfo "scp" "${3}")
+    if [ -z "${logPath}" ]; then
+    	logPath=${3}
     fi
-    
-    if [ "${rely}" != "0" ]; then
-        relyServer=`cat ~/.gotossh_config | sed -n  ${rely}'P'`
-        insertSERVER_INFO ${relyServer}
-        echo "send \"ssh -p${port} -l ${NAME} ${IP}\r\"" >> ${TMP_FILE}
+    if [ "${RELY}" == "0" ]; then
+        insertSCPInfo ${SERVER_INFO} ${logPath} "./${logPath##*/}" "0"
     else
-        echo "spawn ssh -p${port} -l "${NAME} ${IP} >> ${TMP_FILE}
-    fi
-    
-    if [ -z "${port}"  ]; then
-        port=22
-    fi
-    
-    
-    
-    if [ -n "${2}" ]; then
-        svName="Server${NO}"
-        commend=`readINIInfo ${svName} ${2}`
-        if [[ $commend == *\|* ]]; then
-            commendPwd=`echo ${commend} | awk -F\| '{ print $2 }'`
-            commend="${commend%%|*}"
-        fi
-    fi
-    
-    
-    if [ -n "${PWD}"  ]; then
-        echo 'expect "*password:"' >> ${TMP_FILE}
-        echo 'send  "'${PWD}'\r"' >> ${TMP_FILE}
+        relyServer=`cat ~/.gotossh_config | sed -n  ${RELY}'P'`
+        insertServerInfo ${relyServer}
+        # time=`date '+%Y%m%d_%H%M%S'`
+        oldPath=${logPath}
+        # fileName=${logPath##*/}"-"${time}
+        fileName=${logPath##*/}
+        insertSCPInfo ${SERVER_INFO} ${oldPath} "~/${fileName}"
+        echo "send \"exit\r\"" >> ${TMP_FILE}
         echo 'expect "*:~*"' >> ${TMP_FILE}
-        if [ "${2}" == 'sudo' ]; then
-            echo 'expect "@"' >> ${TMP_FILE}
-            echo 'send   "sudo su\r"' >> ${TMP_FILE}
-            echo 'expect "password for"' >> ${TMP_FILE}
-            echo 'send  "'${PWD}'\r"' >> ${TMP_FILE}
-            echo 'expect "*:~*"' >> ${TMP_FILE}
-        fi
-        if [ -n "${commend}" ]; then
-            echo 'send  "'${commend}'\r"' >> ${TMP_FILE}
-        fi
-        if [ -n "${commendPwd}" ]; then
-            echo 'expect "*password:"' >> ${TMP_FILE}
-            echo 'send  "'${commendPwd}'\r"' >> ${TMP_FILE}
-        fi
+        insertSCPInfo ${relyServer} "./"${fileName} "./"${fileName} "0"
     fi
-    
-    echo 'interact' >> ${TMP_FILE}
     chmod a+x ${TMP_FILE}
     ${TMP_FILE}
     echo '' > ${TMP_FILE}
+    exit
 fi
+
+if [ "${RELY}" != "0" ]; then
+    relyServer=`cat ~/.gotossh_config | sed -n  ${RELY}'P'`
+    insertServerInfo ${relyServer}
+    echo "send \"ssh -p${PORT} -l ${NAME} ${IP}\r\"" >> ${TMP_FILE}
+else
+    echo "spawn ssh -p${PORT} -l "${NAME} ${IP} >> ${TMP_FILE}
+fi
+
+if [ -z "${PORT}"  ]; then
+    PORT=22
+fi
+
+# 读取命令参数
+if [ -n "${2}" ]; then
+    COMMAND=$(readCommand ${LINK_NAME} ${2})
+else
+    # 输出命令列表
+	tmpA=$(grep "\[${SERVER_CONFIG_NAME}\]" ${CONFIG_FILE} | wc -l)
+	if [ "${tmpA}" -gt "0" ]; then
+		echoCommandList ${SERVER_CONFIG_NAME}
+		COMMAND_NUMBER=0
+		until [ ${COMMAND_NUMBER} -gt 0 -a ${COMMAND_NUMBER} -le ${COMMAND_NUM} ] 2>/dev/null
+	    do
+	        echo -e  'Command Number:\c'
+	        read COMMAND_NUMBER
+	    done
+	    COMMAND=$(echo "${COMMAND_LIST}" | sed -n ${COMMAND_NUMBER}'p')
+        COMMAND=$(readCommand ${LINK_NAME} ${COMMAND})
+	fi
+fi
+
+if [[ -n ${COMMAND} ]]; then
+    COMMAND=$(replaceCommandAttribute "${LINK_NAME}" "${COMMAND}" "${3}" "${4}")
+fi
+# echo $COMMAND
+# exit
+
+# 处理命令中的密码
+if [[ ${COMMAND} == *\|* ]]; then
+    COMMAND_PWD=$(echo ${COMMAND} | awk -F\| '{ print $2 }')
+    COMMAND="${COMMAND%%|*}"
+fi
+
+
+if [ -n "${PWD}"  ]; then
+	echo 'expect {
+		"*yes/no" { send "yes\r"; exp_continue }
+		"*password*" { send "'${PWD}'\r" }
+		}' >> ${TMP_FILE}
+    echo 'expect "*:~*"' >> ${TMP_FILE}
+    if [ -n "${COMMAND}" ]; then
+        echo 'send  "'${COMMAND}'\r"' >> ${TMP_FILE}
+    fi
+    if [ -n "${COMMAND_PWD}" ]; then
+        echo 'expect "*password:"' >> ${TMP_FILE}
+        echo 'send  "'${COMMAND_PWD}'\r"' >> ${TMP_FILE}
+    fi
+fi
+
+echo 'interact' >> ${TMP_FILE}
+chmod a+x ${TMP_FILE}
+${TMP_FILE}
+echo '' > ${TMP_FILE}
+# ======================================

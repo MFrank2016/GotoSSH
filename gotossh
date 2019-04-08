@@ -175,7 +175,7 @@ echoServerList(){
 # 函数-【将配置文件从v1、v2 升级到v3】
 updateConfigV1V2toV3(){
 	# 确认是否存在类似xxx||xxx||xxx||xxx||xxx||xxx配置
-	local tmpS = $(grep ".*||.*||.*||.*||.*||.*" ${CONFIG_FILE})
+	local tmpS=$(grep ".*||.*||.*||.*||.*||.*" ${CONFIG_FILE})
 	if [ -n "${tmpS}" ]; then
 		return -1
 	fi
@@ -222,7 +222,6 @@ if [ -z "${SETTINGS}" ]; then
 	# v3之前的版本没有改选项，需将配置文件更新至当前版本
 	updateConfigV1V2toV3
 fi
-
 # ==============配置文件处理结束========
 
 

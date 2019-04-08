@@ -87,9 +87,9 @@ If you have installed the older version, you need to remove it in `/usr/local/bi
 
 ```shell
 $ vim ~/.gotossh_config
-JumpServer||111.231.59.85||root||password||22||0||test-service
-JumpServer2||111.231.59.85||root||password||22||0||test-service2
-OnlineServer||118.24.163.31||root||password||22||1||online-service
+JumpServer||111.231.59.85||root||password||22||0
+JumpServer2||111.231.59.85||root||password||22||0
+OnlineServer||118.24.163.31||root||password||22||1
 
 
 [Server-JumpServer]
@@ -402,9 +402,9 @@ $ sudo cp gotossh /usr/local/bin/
 
 ```shell
 $ vim ~/.gotossh_config
-JumpServer||111.231.59.85||root||password||22||0||test-service
-JumpServer2||111.231.59.85||root||password||22||0||test-service2
-OnlineServer||118.24.163.31||root||password||22||1||online-service
+JumpServer||111.231.59.85||root||password||22||0
+JumpServer2||111.231.59.85||root||password||22||0
+OnlineServer||118.24.163.31||root||password||22||1
 
 
 [Server-JumpServer]

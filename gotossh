@@ -8,7 +8,7 @@
 # Usage:
 # $ chmod a+x gotossh
 # $ sudo cp gotossh /usr/local/bin/
-# $ 'test_server||192.168.0.1||root||password||22||0'  > ~/.gotossh_config
+# $ 'test_server||192.168.0.1||root||password||22||0||test-service'  > ~/.gotossh_config
 # $ gotossh   // List Server
 # $ gotossh 1 // Login Num n Server
 
@@ -112,7 +112,7 @@ echoCommandList(){
 	echoMiddleLine "[COMMAND LIST]"
 	echoSkipLine
 	local echoCommandList=$(sed -n '/\['${1}'\]/,/^\[/p'  ${CONFIG_FILE} | sed '/^\[.*\]/d' | awk -F '=' '{print $1}' | sed '/^$/d')
-    echoCommandList=$(echo -e "${echoCommandList}\n$(sed -n '/\[common-command\]/,/^\[/p'  ${CONFIG_FILE} | sed '/^\[.*\]/d' | awk -F '=' '{print $1}' | sed '/^$/d')")
+    echoCommandList=$(echo -e "no-subsequent-operation\n${echoCommandList}\n$(sed -n '/\[common-command\]/,/^\[/p'  ${CONFIG_FILE} | sed '/^\[.*\]/d' | awk -F '=' '{print $1}' | sed '/^$/d')" | sed '/^$/d')
     COMMAND_LIST=${echoCommandList}
     COMMAND_NUM=0
 	local tmpNum=1
@@ -417,7 +417,8 @@ if [ -n "${2}" ]; then
 else
     # 输出命令列表
 	tmpA=$(grep "\[${SERVER_CONFIG_NAME}\]" ${CONFIG_FILE} | wc -l)
-	if [ "${tmpA}" -gt "0" ]; then
+	tmpB=$(grep "\[common-command\]" ${CONFIG_FILE} | wc -l)
+	if [ "${tmpA}" -gt "0" -o "${tmpB}" -gt "0" ]; then
 		echoCommandList ${SERVER_CONFIG_NAME}
 		COMMAND_NUMBER=0
 		until [ ${COMMAND_NUMBER} -gt 0 -a ${COMMAND_NUMBER} -le ${COMMAND_NUM} ] 2>/dev/null
@@ -425,15 +426,19 @@ else
 	        echo -e  'Command Number:\c'
 	        read COMMAND_NUMBER
 	    done
-	    COMMAND=$(echo "${COMMAND_LIST}" | sed -n ${COMMAND_NUMBER}'p')
-        COMMAND=$(readCommand ${LINK_NAME} ${COMMAND})
+		if [ ${COMMAND_NUMBER} -eq "1" ]; then
+			COMMAND=""
+		else
+			COMMAND=$(echo "${COMMAND_LIST}" | sed -n "${COMMAND_NUMBER}p")
+        	COMMAND=$(readCommand ${LINK_NAME} ${COMMAND})
+	    fi
 	fi
 fi
 
-if [[ -n ${COMMAND} ]]; then
+
+if [ -n "${COMMAND}" ]; then
     COMMAND=$(replaceCommandAttribute "${LINK_NAME}" "${COMMAND}" "${3}" "${4}")
 fi
-# echo $COMMAND
 # exit
 
 # 处理命令中的密码

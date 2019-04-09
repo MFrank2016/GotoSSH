@@ -22,7 +22,7 @@ if [ ! -f ${TMP_FILE} ]; then
 fi
 echo "" > ${TMP_FILE}
 CONFIG_FILE="$HOME/.gotossh_config"
-GOTO_SSH_CONFIG=$(cat ~/.gotossh_config)
+GOTO_SSH_CONFIG=""
 LINE_BEGIN="\033[1;32m"
 LINE_END="\033[0m"
 BORDER_LINE="${LINE_BEGIN}############################################################################# ${LINE_END}"
@@ -60,7 +60,9 @@ echoMiddleLine(){
         echo -e  " \c"
     done
     echo -e ${info}" \c"
-    for n in $(seq ${num});
+    # 修复issue 1
+    local tmpNum=$(expr ${MAX_LINE_LENGTH} - ${num} - ${#info} - 20 - 1)
+    for n in $(seq ${tmpNum});
     do
         echo -e  " \c"
     done
@@ -208,15 +210,14 @@ updateConfigV1V2toV3(){
 
 
 
-
-
 # ==============判断当前配置文件版本=====
 if [ ! -f ${CONFIG_FILE} ]; then
 	echoConfigFileNotExist
 	exit
 fi
+GOTO_SSH_CONFIG="$(cat ~/.gotossh_config)"
 
-SETTINGS=$(cat ${CONFIG_FILE} | sed -n '/\[settings\]/,/^$/p')
+SETTINGS=$(cat ${CONFIG_FILE} | sed -n '/\[settings\]/,/^\[/p')
 
 if [ -z "${SETTINGS}" ]; then
 	# v3之前的版本没有改选项，需将配置文件更新至当前版本

@@ -649,3 +649,23 @@ gotossh 1 scp log3
 ```
 gotossh 3 scp /var/log/online-service/online-service.log
 ```
+
+## 对barge的支持
+
+在测试环境使用barge发布项目时，每次都会获得一个浮动IP，每次需要使用新IP略显麻烦，因此将该部分也接入了GotoSSH来简化操作。
+
+使用barge的服务器配置如下：
+
+```xml
+link_name||barge-project-name||root||password||22||0
+```
+
+这里是 `project-name` 要与服务 `barge` 中的项目名称一致。
+
+![](https://i.loli.net/2019/04/24/5cc023416dc0e.png)
+
+即图中的 `appName` 对应的值。
+
+对应的 `password` 也需要改为该服务的 `password`。
+
+其余配置跟其他服务一样，使用[Server-link_name]来配置其自定义命令，使用[Server-Attribute-link_name]来配置其自定义属性，详情可参见上面配置说明。

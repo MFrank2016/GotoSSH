@@ -14,8 +14,9 @@
 
 
 
-VERSION=3.0
+VERSION=3.1
 TMP_FILE="$HOME/.gotossh_tmpfile"
+BARGE_FILE=$(pwd)"/barge.yaml"
 # 若临时脚本文件不存在则创建
 if [ ! -f ${TMP_FILE} ]; then
 	touch ${TMP_FILE}
@@ -311,6 +312,39 @@ insertSCPInfo(){
     echo 'expect "*:~*"' >> ${TMP_FILE}
 }
 
+# 函数 -【生成barge文件】
+generateBargeFile(){
+    # 若文件不存在则创建
+    if [ ! -f ${BARGE_FILE} ]; then
+        touch ${BARGE_FILE}
+    fi
+    echo "apiVersion: 0.0.4" > ${BARGE_FILE}
+    echo "apps:" >> ${BARGE_FILE}
+    echo "  - appName: "${1}  >> ${BARGE_FILE}
+    echo "    build:" >> ${BARGE_FILE}
+    echo "      language: java" >> ${BARGE_FILE}
+    echo "      maven:" >> ${BARGE_FILE}
+    echo "        pom: pom.xml" >> ${BARGE_FILE}
+    echo "        skipTests: true" >> ${BARGE_FILE}
+    echo "        profile: test" >> ${BARGE_FILE}
+    echo "        jar: test" >> ${BARGE_FILE}
+    echo "        mainClass: test" >> ${BARGE_FILE}
+    echo "    deploy:" >> ${BARGE_FILE}
+    echo "      isolation: stable" >> ${BARGE_FILE}
+    echo "      expire: 1h" >> ${BARGE_FILE}
+}
+
+# 函数 -【获取barge IP 信息】
+getBargeSSHInfo(){
+    BARGE_IP=$(barge info | sed -n '$p')
+    BARGE_IP=${BARGE_IP#*@}
+    BARGE_IP=${BARGE_IP%[0m}
+}
+
+# 函数 -【服务器是否配置了该命令中的属性】
+ifCommandConfiged(){
+    
+}
 # ===================================
 
 
@@ -404,6 +438,16 @@ if [ "${RELY}" != "0" ]; then
     insertServerInfo ${relyServer}
     echo "send \"ssh -p${PORT} -l ${NAME} ${IP}\r\"" >> ${TMP_FILE}
 else
+    if [[ ${IP} == barge-* ]]; then
+        IP=${IP#*-}
+        generateBargeFile "${IP}"
+        getBargeSSHInfo
+        if [ ${#BARGE_IP} -gt 15 ]; then
+            echo ${BARGE_IP}
+            exit
+        fi
+        IP=${BARGE_IP}
+    fi
     echo "spawn ssh -p${PORT} -l "${NAME} ${IP} >> ${TMP_FILE}
 fi
 

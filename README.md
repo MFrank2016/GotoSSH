@@ -669,3 +669,5 @@ link_name||barge-project-name||root||password||22||0
 对应的 `password` 也需要改为该服务的 `password`。
 
 其余配置跟其他服务一样，使用[Server-link_name]来配置其自定义命令，使用[Server-Attribute-link_name]来配置其自定义属性，详情可参见上面配置说明。
+
+注意，使用该特性时，会在当前路径下生成barge.yaml文件，如果当前已经有barge.yaml文件，则会覆盖当前文件，所以请不要在项目路径下使用该特性。

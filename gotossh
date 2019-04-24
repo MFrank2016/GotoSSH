@@ -341,10 +341,6 @@ getBargeSSHInfo(){
     BARGE_IP=${BARGE_IP%[0m}
 }
 
-# 函数 -【服务器是否配置了该命令中的属性】
-ifCommandConfiged(){
-    
-}
 # ===================================
 
 

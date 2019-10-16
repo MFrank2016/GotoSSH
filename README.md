@@ -382,12 +382,6 @@ Mac :
 $ brew install expect
 ```
 
-```shell
-$ brew install gnu-sed --with-default-names
-$ export PATH="$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH"
-$ export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-```
-
 ## 安装 GotoSSH
 
 ```shell

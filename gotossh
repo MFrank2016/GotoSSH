@@ -258,6 +258,11 @@ readINIInfo(){
     echo "$tmp_iniInfo"
 }
 
+# 函数 -【正则匹配】
+regex() {
+    [[ $1 =~ $2 ]] && printf '%s\n' "${BASH_REMATCH[1]}"
+}
+
 # 函数-【替换命令中的参数】
 replaceCommandAttribute(){
     local tmp_section="Server-Attribute-${1}"
@@ -267,15 +272,15 @@ replaceCommandAttribute(){
     # 替换自定义属性
     while [[ "${tmp_command}" == *\[*\]* ]]
     do
-        local tmp_key=$(echo ${tmp_command} | sed -r 's/.*\[(.*)\].*/\1/')
+        local tmp_key=$(regex "${tmp_command}" '.*\[(.*)\].*')
         local tmp_attribute=$(readINIInfo ${tmp_section} ${tmp_key})
         if [ -z "${tmp_attribute}" ]; then
             echo "Attribute Not Found:${tmp_key}!"
             exit
         fi
-        tmp_command=$(echo ${tmp_command} | sed "s/\[${tmp_key}\]/${tmp_attribute}/")
+        tmp_command=${tmp_command//\[${tmp_key}\]/${tmp_attribute}} 
     done  
-    echo ${tmp_command}
+    printf '%s' "$tmp_command"
 }
 
 # 函数-【向临时脚本中插入服务器登录信息】

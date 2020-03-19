@@ -141,6 +141,13 @@ JumpServer||111.231.59.85||root||password||22||0||test-service
 
 The `rely_server_no` column means this server relies another server, so this shell script will login that server first.(the `rely_server_no` starts form `1`, so `0` means this server doesn’t rely any other server)
 
+If you have set your RSA_PUB key in your server(that means you could login that server without password), use '-' replace the 'password'
+
+```
+JumpServer||111.231.59.85||root||-||22||0||test-service
+```
+
+
 ### server custom info
 
 The second part is custom commands and custom attributes, you could set any command here for each server.
@@ -449,6 +456,12 @@ JumpServer||111.231.59.85||root||password||22||0||test-service
 ```
 
 `rely_server_no`代表的是这台服务器是否依赖其他服务器，如果设置为`0`，代表它不依赖其他服务器，直接登录，如果设置为大于0的值，则会先登录那台服务器，然后再跳转到这台服务器。
+
+如果设置了免密登陆，使用 ‘-’ 替换 ‘password’：
+
+```
+JumpServer||111.231.59.85||root||-||22||0||test-service
+```
 
 ### 服务器自定义信息
 

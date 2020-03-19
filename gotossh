@@ -14,7 +14,7 @@
 
 
 
-VERSION=3.1
+VERSION=3.2
 TMP_FILE="$HOME/.gotossh_tmpfile"
 BARGE_FILE=$(pwd)"/barge.yaml"
 # 若临时脚本文件不存在则创建
@@ -291,7 +291,7 @@ insertServerInfo(){
     local tmpPort=$(echo ${1} | sed 's/||/ /g' |  awk '{ print $5 }')
     local tmpRely=$(echo ${1} | sed 's/||/ /g' |  awk '{ print $6 }')
     echo "spawn ssh -p${tmpPort} -l "$tmpName $tmpIp >> ${TMP_FILE}
-    if [ -n "${tmpPwd}"  ]; then
+    if [ "${tmpPwd}" != "-" ]; then
 		echo 'expect {
 		"*yes/no" { send "yes\r"; exp_continue }
 		"*password*" { send "'${tmpPwd}'\r" }
@@ -312,8 +312,10 @@ insertSCPInfo(){
     else
         echo "send \"scp ${tmpName}@${tmpIp}:${2} ${3}\r\"" >> ${TMP_FILE}
     fi
-    echo 'expect "*password:"' >> ${TMP_FILE}
-    echo 'send  "'${tmpPwd}'\r"' >> ${TMP_FILE}
+    if [ ${tmpPwd} != "-" ]; then
+        echo 'expect "*password:"' >> ${TMP_FILE}    
+        echo 'send  "'${tmpPwd}'\r"' >> ${TMP_FILE}
+    fi
     echo 'expect "*:~*"' >> ${TMP_FILE}
 }
 
@@ -493,7 +495,7 @@ if [[ ${COMMAND} == *\|* ]]; then
 fi
 
 
-if [ -n "${PWD}"  ]; then
+if [ "${PWD}" != "-"  ]; then
 	echo 'expect {
 		"*yes/no" { send "yes\r"; exp_continue }
 		"*password*" { send "'${PWD}'\r" }
